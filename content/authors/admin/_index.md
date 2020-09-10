@@ -45,6 +45,6 @@ user_groups:
 - Visitors
 ---
 
-Jake Wittman is a PhD student in entomology in the forest insect lab at the University of Minnesota. His research interests include invasion biology, quantitative ecology, agent-based models, Bayesian statistical methods, machine learning, science and mathematics pedagogy, and open/replicable science practices. He is currently working on several projects related to the emerald ash borer (*Agrilus planipennis*), an invasive wood-boring beetle in North America. Before going to graduate school to study entomology, Jake taught 7 - 12 grade science in a school that practice project-based learning. When he's not busy with his work, he enjoys reading sci-fi and fantasy, backpacking, baking, playing video games, running absurd distances, and cats. 
+Jake Wittman is a PhD candidate in entomology in the forest insect lab at the University of Minnesota. His research interests include invasion biology, quantitative ecology, agent-based models, Bayesian statistical methods, machine learning, science and mathematics pedagogy, and open/replicable science practices. He is currently working on several projects related to the emerald ash borer (*Agrilus planipennis*), an invasive wood-boring beetle in North America. Before going to graduate school to study entomology, Jake taught 7 - 12 grade science in a school that practice project-based learning. When he's not busy with his work, he enjoys reading sci-fi and fantasy, backpacking, baking, playing video games, running absurd distances, and cats. 
 
 
