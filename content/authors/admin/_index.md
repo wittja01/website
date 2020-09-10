@@ -1,7 +1,7 @@
 ---
 authors:
 - admin
-bio: My research interests include invasion biology, quantitative ecology, pedagogy, and reproducible and open science practices.
+bio: My research interests include invasion biology, quantitative ecology, pedagogy, education, and reproducible and open science practices.
 education:
   courses:
   - course: PhD in Entomology; Graduate minor in Biostatistics
@@ -17,7 +17,8 @@ email: "wittja01(at)gmail.com"
 interests:
 - Invasion biology
 - Quantitative ecology
-- Science/Statistics Pedagogy
+- Science/statistics pedagogy and education
+- R Programming
 name: Jacob T Wittman
 organizations:
 - name: University of Minnesota
@@ -25,7 +26,7 @@ organizations:
 role:
 social:
 - icon: envelope
-  link: mailto:wittja01@gmail.com
+  link: mailto:wittm094@umn.edu
 - icon: twitter
   icon_pack: fab
   link: https://twitter.com/wittja01
