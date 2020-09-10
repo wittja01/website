@@ -1,0 +1,39 @@
+---
+title: "Resources for using R with HPC"
+author: "Jake Wittman"
+date: '2020-06-10'
+tags:
+- self-resource
+- HPC
+- MSI
+- R
+categories: self-resource
+---
+
+The MSI at UMN doesn't have much in the way of R specific tutorials, so I had to go to Google to give me a hand figuring out what I need to do in R to make the most of the HPC resources. 
+
+Here are some website I've found helpful and the specific reasons I found them helpful. Others might get more or less out of them, depending on their experience/background. It seems like a lot of these resources have specific portions explaining aspects of the HPC system they're written for:
+
+## General HPC and R resources
+
+[Parallel Computing with R](https://www.glennklockwood.com/data-intensive/r/) gives some simple and clear examples of how to write shared memory and distributed memory R code, among other things. Especially like the `dopar` examples.
+
+[High Performance Computing in R](https://quantdev.ssri.psu.edu/sites/qdev/files/High_Performance_Computing_in_R_Tutorial.html) gave a clear walk through of the PBS script (MSI uses PBS) to run an R script. Also provides functions that are used as part of a shared memory/distributed memory workflow.
+
+[How to submit R code to a Portable Batch System (PBS) managed High Performance Computing (HPC) Facility](https://gist.github.com/brfitzpatrick/132cedf8206ef45abe41f3552819a909) another example of writing a PBS script for a shared memory R script that I found useful.
+
+[R Sample Scripts](https://www.cqu.edu.au/eresearch/high-performance-computing/hpc-sample-code-and-scripts/r-sample-scripts) Additional example PBS submission script with template and actual example.
+
+[HPC Software R](https://www.glue.umd.edu/hpcc/help/software/r.html) has links to other pages with examples of using R and MPI but gives a few additional tips for using R with `snow`/`doSNOW`. If the links are particularly nice, I'll add them here.
+
+[R - Research Computing](https://rcc.uchicago.edu/docs/software/environments/R/index.html) is a user guide for using SLURM to submit jobs, but has good examples of SLURM scripts alongside R scripts you can run with them to test for yourself. (Note: why in the hell did someone decide it was a good idea to use the master/slave terminology for this sort of thing. Yuck.)
+
+[snow Simplified: a user guide](http://www.sfu.ca/~sblay/R/snow.html) has pretty simple explanations for the different `cluster*` functions in snow, among other things. Weirdly, using a quote from a CNN article they point out the offensiveness of the master/slave terminology, provide an alternative terminology in primary/secondary, but continue to use the offensive and racist language.
+
+## Using Stan on HPC
+
+Stan discourse post [here](https://discourse.mc-stan.org/t/running-model-in-a-hpc-and-would-like-to-save-intermediate-outputs/3529/2) mentions the `sample_file` parameter that streams samples to a file. In the event the calculation is interrupted, can still have some of the samples.
+
+[Installing RStan on HPC cluster](https://mlisi.xyz/post/rstan-cluster/) walks through the steps of *duh* installing RStan on HPC.
+
+I know you can parallelize aspects of the MCMC iterations using the `reduce_sum` for within-chain parallelism, but I'm not super confident in my ability to implement that. I think for at least my simulation study use-case, I should compile the model once and then fit the model with one simulated dataset per core, allowing the chains to run serially. That's probably how I'll get the fastest speed-up. For my other model, I might have to figure out how to do some within-chain parallelism...

@@ -1,0 +1,211 @@
+---
+title: "Speeding up mixed effects models with reduce_sum in Stan"
+author: "Jake Wittman"
+date: '2020-08-03'
+tags:
+- simulation
+- Bayesian analysis
+categories: self-resource
+---
+
+
+
+<div id="this-post-is-a-work-in-progress." class="section level1">
+<h1>This post is a work in progress.</h1>
+<p>This post is for my own edification. The Stan crew recently added a way to parallelize sampling beyond a chain per core using <code>reduce_sum</code>. It’s not yet implemented into <code>brms</code> or <code>rstanarm</code> as far as I’m aware, so I’m going to take the <code>brms</code> created Stan code and try to modify it to use <code>reduce_sum</code>. This will use the same simulated data I was working with previously with a mixed-effects structure, although I’m going to increase the sample size and number of groups to make it more obvious if there is a speed-up.</p>
+<pre class="r"><code># Set up libraries
+library(MASS)
+library(tidyverse)
+library(rstan)
+library(brms)
+library(bayesplot)</code></pre>
+<pre class="r"><code># Simulate snake length data - based on code from Kery 2010
+set.seed(314)
+# Sample size values
+n_groups &lt;- 100 # Number of groups/populations
+n_samples &lt;- 75 # Number of samples in each population (note to self: try doing this later with varying n_samples in each pop)
+n &lt;- n_groups * n_samples
+group_indicator &lt;- gl(n = n_groups, k = n_samples)
+
+# Body length (cm)
+
+original_length &lt;- runif(n, 45, 70)
+standard_length &lt;- scale(original_length)
+hist(standard_length)
+
+# Build the design matrix without intercept
+Xmat &lt;- model.matrix(~group_indicator * standard_length - 1)
+
+# Hyperparameters
+intercept_mean &lt;- 230 # mu alpha
+intercept_sd &lt;- 20 # sigma alpha
+slope_mean &lt;- 60 # mu beta
+slope_sd &lt;- 30 # sigma beta
+
+# Need a parameter for covariance
+intercept_slope_covariance &lt;- 10
+
+mu_vector &lt;- c(intercept_mean, slope_mean)
+var_cov_matrix &lt;- matrix(c(intercept_sd^2, intercept_slope_covariance,
+                           intercept_slope_covariance, slope_sd^2), 2, 2)
+effects &lt;- mvrnorm(n = n_groups, mu = mu_vector, Sigma = var_cov_matrix)
+all_effects &lt;- c(effects[, 1], effects[, 2])
+
+lin_pred &lt;- Xmat[,] %*% all_effects
+eps &lt;- rnorm(n = n, mean = 0, sd = 30)
+mass &lt;- lin_pred + eps
+
+# Create a new data frame
+dat &lt;- data.frame(mass = mass,
+                  standard_length = standard_length,
+                  group_indicator = group_indicator,
+                  random_indicator = as.factor(sample(1:10, size = n, replace = T)),
+                  random_x = runif(n = n, 0, 1))</code></pre>
+<pre class="stan"><code>functions {
+
+}
+data {
+  int&lt;lower=1&gt; N;  // number of observations
+  vector[N] Y;  // response variable
+  int&lt;lower=1&gt; K;  // number of population-level effects
+  matrix[N, K] X;  // population-level design matrix
+  // data for group-level effects of ID 1
+  int&lt;lower=1&gt; N_1;  // number of grouping levels
+  int&lt;lower=1&gt; M_1;  // number of coefficients per level
+  int&lt;lower=1&gt; J_1[N];  // grouping indicator per observation
+  // group-level predictor values
+  vector[N] Z_1_1;
+  vector[N] Z_1_2;
+  int&lt;lower=1&gt; NC_1;  // number of group-level correlations
+}
+transformed data {
+  int Kc = K - 1;
+  matrix[N, Kc] Xc;  // centered version of X without an intercept
+  vector[Kc] means_X;  // column means of X before centering
+  for (i in 2:K) {
+    means_X[i - 1] = mean(X[, i]);
+    Xc[, i - 1] = X[, i] - means_X[i - 1];
+  }
+}
+parameters {
+  vector[Kc] b;  // population-level effects
+  real Intercept;  // temporary intercept for centered predictors
+  real&lt;lower=0&gt; sigma;  // residual SD
+  vector&lt;lower=0&gt;[M_1] sd_1;  // group-level standard deviations
+  matrix[M_1, N_1] z_1;  // standardized group-level effects
+  cholesky_factor_corr[M_1] L_1;  // cholesky factor of correlation matrix
+}
+transformed parameters {
+  matrix[N_1, M_1] r_1;  // actual group-level effects
+  // using vectors speeds up indexing in loops
+  vector[N_1] r_1_1;
+  vector[N_1] r_1_2;
+  // compute actual group-level effects
+  // returns the product of the diagonal matrix from the sd vector and the
+  // matrix L (which is the covariance matrix, I think), multiplied by the
+  // standardized group-level effects
+  r_1 = (diag_pre_multiply(sd_1, L_1) * z_1)&#39;; 
+  r_1_1 = r_1[, 1];
+  r_1_2 = r_1[, 2];
+}
+model {
+  // initialize linear predictor term
+  vector[N] mu = Intercept + Xc * b;
+  for (n in 1:N) {
+    // add more terms to the linear predictor
+    mu[n] += r_1_1[J_1[n]] * Z_1_1[n] + r_1_2[J_1[n]] * Z_1_2[n];
+  }
+  // priors including all constants
+  target += normal_lpdf(b | 0, 50);
+  target += normal_lpdf(Intercept | 0, 100);
+  target += normal_lpdf(sigma | 0, 50)
+    - 1 * normal_lccdf(0 | 0, 50);
+  target += normal_lpdf(sd_1 | 0, 50)
+    - 2 * normal_lccdf(0 | 0, 50);
+  target += std_normal_lpdf(to_vector(z_1));
+  // Need a prior on the covariance matrix
+  // Per the brms manual an LKJ prior of 1 means all correlations are equally
+  // likely. If &gt; 1, extreme correlations are less likely, while &lt; 1 but &gt; 0 
+  // extreme correlations become more likely.
+  target += lkj_corr_cholesky_lpdf(L_1 | 1);
+  // likelihood including all constants
+  // add 
+  target += normal_lpdf(Y | mu, sigma);
+  
+}
+generated quantities {
+  // actual population-level intercept
+  real b_Intercept = Intercept - dot_product(means_X, b);
+  // compute group-level correlations
+  // The Cholesky matrix is (I think) a lower triangular matrix, using this
+  // multiplies itself by it&#39;s transpose to give the full covariance matrix?
+  // This is necessary because the decomposition turns the 1s on the diagonal of
+  // the covariance matrix to non-1 values (so that multiplying L_1 * (L_1)^T 
+  // gives the proper covariance matrix).
+  corr_matrix[M_1] Cor_1 = multiply_lower_tri_self_transpose(L_1);
+  vector&lt;lower=-1,upper=1&gt;[NC_1] cor_1;
+  // extract upper diagonal of correlation matrix
+  for (k in 1:M_1) {
+    for (j in 1:(k - 1)) {
+      cor_1[choose(k - 1, 2) + j] = Cor_1[j, k];
+    }
+  }
+  
+
+}
+</code></pre>
+<pre class="r"><code># Compile the brms model without fitting it
+brms_corr_mod &lt;- brm(mass ~ standard_length + (standard_length | group_indicator),
+                     data = dat,
+                     chains = 0,
+                     seed = 314,
+                     prior = c(prior(normal(0, 50), b),
+                               prior(normal(0, 100), Intercept),
+                               prior(normal(0, 50), sigma),
+                               prior(normal(0, 50), sd)))
+# Sample from the model and record how long it takes
+system.time(update(brms_corr_mod, newdata = dat, chains = 1, cores = 2))
+# Set up data for my model
+corr_mod_data &lt;- list(N = n,
+                      Y = as.vector(mass),
+                      K = 2, # number of predictors including intercept
+                      X = model.matrix(~ standard_length),
+                      Z_1_1 = rep(1, n),
+                      Z_1_2 = dat$standard_length,
+                      J_1 = as.numeric(group_indicator),
+                      N_1 = n_groups,
+                      M_1 = 2, # random slopes model so M_1 = 2
+                      NC_1 = 1,
+                      grainsize = 1
+                      )
+
+# Compile my model without fitting it
+
+cor_mod &lt;- cmdstan_model(cpp_options = list(stan_threads = TRUE),
+                         stan_file = here::here(&quot;content/post/test.stan&quot;))
+                        
+cor_mod_samples &lt;- sampling(data = corr_mod_data,
+                            chains = 3,
+                            cores = 3,
+                            iter = 20000,
+                            seed = 314)
+
+
+
+
+mcmc_dens(cor_mod_samples2, pars = vars(contains(&quot;b&quot;)))
+mcmc_dens(brms_corr_mod, pars = vars(contains(&quot;b&quot;)))</code></pre>
+<pre class="r"><code># Add one more covariate in the random effects
+brms_corr_mod2 &lt;- brm(mass ~ standard_length + random_x + (standard_length + random_x | group_indicator),
+                     data = dat,
+                     chains = 3,
+                     cores = 3,
+                     seed = 314,
+                     prior = c(prior(normal(0, 50), b),
+                               prior(normal(0, 100), Intercept),
+                               prior(normal(0, 50), sigma),
+                               prior(normal(0, 50), sd)))
+
+stancode(brms_corr_mod2)
+standata(brms_corr_mod2)</code></pre>
+</div>

@@ -1,0 +1,294 @@
+---
+title: "Can I figure out how to use R within a HPC system?"
+author: "Jake Wittman"
+date: 2020-06-09
+categories: ["self-resource"]
+tags: ["self-resource", "HPC", "MSI"]
+---
+
+I'm beginning my journey into learning how to use the resources at the Minnesota Supercomputing Institute. This is technically the second time I've "begun" and I thought it might be helpful for me to just document what I'm doing/learning as a resource for future me so I don't have to "begin" again. I'll use the self-resource category for these posts along with the same tag and HPC/MSI tags to help me find these resources in the future. 
+
+# Introduction to MSI tutorial video
+
+## Steps to connecting
+
+- Use the console and ssh into the login node with `ssh userid@login.msi.umn.edu`
+- From there, I can login to a compute node with `ssh node_name`
+
+## Scheduling tasks
+
+- Use bash scripts to schedule tasks. For example, in the tutorial video the presenter had a file called "clustal.run" which is the bash submission script containing information for the scheduler
+- This bash script contains (and is maybe not limited to?) info to tell the scheduler what file to run, messaging about the task, what to do with "various output", what queue to send it to, and how long the task is expected to run.
+- The script in the example also contains extra command line commands - change directories to where the binary is, execute the binary, takes an input file, and gives an output file
+- Use the `qsub` command with the submission file ex: `qsub clustal.run`. This gets a submission id
+- Check submission with `qstat` command to see the status of the job. R means running. C means complete
+- The `less` command can be used to get a view of text files, I think?
+
+## Resources
+
+- Interactive HPC
+- Multiple tiers of storage
+- Cloud computing resources - could use Jupyter notebooks
+
+## Interactive HPC
+- The NICE program allows you to spin up a full Linux desktop GUI.
+- nb.msi.umn.edu gives access to JupyterHub - scheduler gets access to the Jupyter Hub
+- nice.msi.umn.edu gives access to the Linux desktop
+
+## Storage
+
+- Each PI account gets 120 TB on the Tier-2 storage. Not POSIX, have to access via S3 interface
+- Access to long-term archive storage
+- Globus is used for moving data from say, desktop to MSI or to move data among the storage tiers
+
+# Introduction to Linux tutorial
+
+## Useful commands that I'm less familiar with
+
+- `pwd` prints the working directory
+- `clear` to clear the screen
+- `cd..` takes you up one level
+- `mv` lets you move a file or directory. `mv location_original location_move`
+- `cp` copies a file or directory `cp location_original location_copy`
+- To delete a directory and everything inside must do `rm -r` which stands for recursive. Deletes the dir and everything inside it
+- `.` stands for current directory, `~` stands for home directory
+- To interrupt a command that has been entered and is running `ctrl + c`.
+- `man command` views command manual pages, for example `man rm`
+- `*` wildcard symbol. Ex: `ls p*` lists the content of all directories with names starting with letter p or `rm *txt` removes all .txt files in a directory or `mv *.txt ..` moves all text files up one directory level
+- in nano `ctrl + o` saves file
+- `less` lets you view a file without editing, exit with q (doesn't seem to be part of Windows Terminal)
+- `>` sends the output of a command to somewhere ex: `ls > filelist.txt` saves the output of ls in the file filelist.txt
+- `>>` appends new output to an existing file without overwriting. `>` will overwrite
+- `|` Sends output of one command to another command `ls | less` pipes output of ls to the less command. Ex: `ls | grep .txt` sends the output of ls to grep to search for .txt in strings
+- `sed` is a command that can be used to replace text, I think? Not 100% clear on how to use it
+- Can string together `|` with `>` to put the output of pipes into a file
+- `chmod` changes the permissions of a file/directory. Ex: `chmod g+r filename`. Use `chmod o+...` to give outsiders permissions. `chmod g-rw filename` removes read and write permissions from group members. Use `u` to give permissions to u (or remove permissions). Works for directories too. Directory permissions apply to everything within the directory. 
+-`chown` give ownership of a file to a person or group
+-`find . -name file.txt` where . tells you where to start looking for a file. Will search in all sub directories, so if `.` searches all sub directorys of cd
+- `cat` reads a file into the terminal `cat hello.sh` prints the contents of the hello.sh file
+- `grep` search ex: `grep hello *` searches for hello in the directories *
+- `ping` tests network connectivity ex: `ping www.google.com` and can kill with ctrl+c
+- `wc` word count
+- `top` shows you the top running programs on your current node. Gives some summaries of usage
+- `ps` shows you running processes, follow by `aux` to get additional info
+- `kill process_id` kills a process. Get the process id from `ps`
+- `date` current dat
+- `tar` extract/create archive
+- `groups` shows you group membership
+- `head`/`tail` top and bottom of a file
+- `uname` prints username
+- `cd -` returns to previous directory
+- `find . -type f -name 'ABC*' -delete` deletes all files with name containing "ABC" in the directory .
+- `ls -a` lists hidden files (starts with a ".")
+- `./program.exe &` runs the program in the background and returns control to you. `ping www.google.com > pingfile.txt &` runs ping in bacvkground and puts output into pingfile.txt. Kill with `kill process_id`. If you log out while the process is still going, it will continue
+- 
+
+
+
+## Remote connections
+
+- `ssh username@login.msi.umn.edu` to get into the login node
+- `ssh cluster_name` to connect to a particular compute node
+- `exit` to close a connection
+- `ssh -X` allows  graphics windows, but its better to use NICE if you want graphics systems
+- `scp` lets you copy a file from your desktop to the MSI machine Ex: `scp localfile.txt login.msi.umn.edu:~/` to copy a file to the login machine. Following the colon is the directory you want to copy to (in this case the home directory). Reversing the order of the directories to the command allows you to pull from the supercomputer to the home machine. Will work with wildcards
+- Use Globus for a lot of files/a lot of big files
+
+
+## File permissions
+
+- Every file and directory belongs to a user and a group. Files and directories have a set of permissions controlling who can read, write, and execute them. To see files and permissions use `ls -l`.
+- The first symbol is - for file, d for directory. The next three show r (read), w (write), x (execute) for user, the next group of three show the same for group, the last three show permissions for outsiders
+- On MSI, every user is in a group and everyone is a member of outsiders.
+- Can set up a "stickybit" for a directory, so anything made within a directory automatically has directory specific permissions applied ot them
+- There are numeric codes to assign permissions `777` gives everyone all, `555` owner rwx, everyone else rw, `000` no one has any permissions
+
+## Executables
+
+- Just type the file path of the executable ex: `./hello.sh` runs a shell script called "hello".
+- If programs are in `bin` or `usr/bin` you can often type the program by name and not the path to run them. `ls` is an example. Type `which ls` to find out where ls is stored.
+
+## Environmental variables
+
+- PATH is an example of a variable
+- Example: `VAR1 = 5` and then `echo $VAR1` prints `5` to the terminal
+- To make a variable accessible to sub-processes use `export VAR1=5` VAR1 will get propogated to other shell instances you start
+- Use the .bashrc file if there are variables you want executed everytime you login. 
+
+## Software modules
+
+- `module avail` when connected to a cluster shows you all the available software module
+- `module avail matlab` shows all the version of matlab available. 
+- `module load matlab/R2016b` loads a specific version of Matlab
+- `module unload matlab/R2016b` unloads the Matlab
+- loading allows you to run the software by name
+- `module purge` unloads all
+- `module show matlab/R2016B` tells you what is happening
+- `module list` shows you what is currently loaded
+
+## Scripts
+
+- at the top of the script typing `#!/bin/bash -l` at top specifies a bash script
+- Type shell commands below and create a script of commands to run when you run the bash script
+- Probably want to give x permission to these to actually run them.
+
+
+# Job Submission and Scheduling
+
+## Connecting to MSI
+
+- Need to get an ssh capable program for Windows like PuTTY or Cygwin
+- type `exit` to close ssh connections
+
+## MSI Computing environment
+
+- Home directories are unified across systems
+- View disk space with `groupquota`
+
+## Job Scheduling
+
+- Two types of jobs - non-interactive and interactive
+- Job scheduler front end is Portable Batch System (PBS)
+- Jobs start in your home directory with no modules
+- Must load modules or change directories within job script
+
+## Job Scripts
+
+- First line `#!/bin/bash -l` telling it how to read the rest of the script
+- `#PBS -l walltime=8:00:00,nodes=3:ppn=8,pmem=1000mb` - how long to run, number of nodes, number of cores per nodes, and amount of memory. This is requestin 8 hours, with 3 nodes and 8 cores per node (24 total cores), and per core memory (1000 mb * 24 cores = ~ 24 gb). Can also just specify total memory with `mem=24000mb` or `mem=24gb`. This line is required
+- 1 core, 1 thread
+- Presenter recommended working up to 24 total cores, then incrementing in 24 cores above that (24 cores per node, so if the job is multi-node, always requesting all cores). Might get job started faster with less cores per node, but also spreads you wider
+- `#PBS -m abe` (not required). Requests an email message when job aborts, beings, or ends.
+- `#PBS -M sample_email@umn.edu` Specifies the email address for the previous line
+- For R jobs, it will be most simple to use 1 node with max of 24 cores. More than 1 node and I have to learn how to use MPI because spreading work over the nodes requires working over the network
+- Name file .pbs
+- Add a line `cd $PBS_O_WORKDIR` after loading modules to move the cd to the directory the job was submitted from. Jobs start running from the home directory.
+
+## Submitting a job
+
+- `qsub -q queuename scriptname`. Can leave out `-q queuename`. Including it allows you to specify a certain queue. Leaving it out and the scheduler will try to fit your job in somewhere. If you need special queue, best to specify
+- Resources to consider: walltime, total cores and cores per node, memory per node, and special hardware
+- `qstat` to see status of jobs
+- If you script produces terminal output, collects text into a .o file. Any errors collected into a .e file. Any other output (like data) will appear too.
+- Clusters are busiest during the week, least busy on Sunday.
+- `showq` shows all jobs. Can specify `-w user=username`. 
+- `checkjob -v jobnumber` will show you info about job. 
+- `qdel jobnumber` lets you delete a job
+
+## Interactive jobs
+
+- `qsub -I -l walltime=00:30:00,nodes=1:ppn=4,mem=2gb`. -I is for interactive. Dunno what -l or -X is. This requests 10 minutes. -X doesn't seem to work for me when I try to submit jobs *shrug*
+- These jobs wait in queue like all others
+
+## Service Units
+
+- Given 70,000 SU in account each year. Can request more up to I think 280,000 SU without much justification.
+- 1 SU corresponds to 1.5 hours on 1 core. Lab cluster doesn't consume SU (does lab cluster still exist?)
+- `acctinfo` shows you remaining SU.
+- Fairshare target designates queue priority. If you use more of the queue than expected, your jobs get slowed down. Resets about every week (some sort of decaying weighted average, reseting to 0 in 7 days with no additional usage). 
+
+## Simple parallelization: Backgrounding
+
+- If you have several programs, each only using 1 core, you can collect within a job script and run all in one script.
+
+```{}
+#!/bin/bash -l
+#PBS -l walltime=8:00:00,nodes=1:ppn=8,pmem=1000mb
+#PBS -m abe
+#PBS -M sample_email@umn.edu
+
+cd ~/job_directory
+module load example_program/1.0
+./program1.exe <input1> output1 &
+./program2.exe <input2> output2 & ...
+./program8.exe <input8> output8 &
+wait
+```
+
+- The & sends each job to run on a core and then wait waits until they're all done. If you don't include wait, the job scheduler will kill the job when one finishes. 
+- These programs must run independently (serial).
+- Probably best if these will all run about the same time, otherwise you have idle cores and waste SU
+
+- Job Arrays are better for jobs that have differing run times
+- Works with a template script:
+
+```{}
+#!/bin/bash -l
+#PBS -l walltime=8:00:00,nodes=1:ppn=8,pmem=1000mb
+#PBS -m abe
+#PBS -M sample_email@umn.edu
+
+cd ~/job_directory
+module load example_program/1.0
+./program.exe < input$PBS_ARRAYID > output$PBS_ARRAYID
+```
+
+Then submit an array of 10 jobs with `qsub -t 1-10 template.pbs`
+- the -t makes 10 copies of the job and replacying PBS_ARRAYID with the number 1-10.
+- In this example, the jobs would each get 1 node with 8 cores and each job runs when space is available.
+
+
+## Using R
+
+- start R with `module load R` then `R`. Then can install packages as normal. (May need to check where packages are installed)
+
+
+
+# Parallel computation overview
+
+- A single node has a shared memory system. All the processors cores on a single node share the same memory
+- Strategies for shared memory: collect serial calculations, a single program uses multiple threads (often means OpenMP), or a message passing (MPI) framework but Not needed for shared memory system.
+- Using multiple nodes is a distributed memory system. Simple parallelization can still work (collecting serial calculations), but otherwise have to use message passing alone or message passing + threading
+- Simple parallelization < OpenMP < MPI < MPI + OpenMP < Accelerators (GPUs using CUDA). Order of programming difficulty
+
+## Simple parallelization
+- See example of simple paralellization from the job scheduling tutorial. Could also be the same program with different inputs
+- GNU Parallel is a way to spawn multiple threads to perform a shell tasks
+- GNU PArallel example: `cat command_list.txt | parallel -j 24` Goes through the list of commands in the .txt file and runs each command in the list in chunks of 24. Each job should still be independent.
+- `find . -name '*.txt' | parallel -j 48 -sshloginfile $PBS_NODEFILE wc {}` will find files ending in .txt and then will use 48 threads to word count (wc) each file. Specifying sshloginfile makes it aware of all nodes being used, not just a single node
+- `pdsh` is used to  run multiple independnet processes on multiple hosts
+- `pdsh -R ssh -w node0123, node0123, node0125 "./program.exe"` will run two copies of program.exe on node0123 and one copy on node0125 using ssh to connect.
+- `pdsh -R ssh -w^"$PBS_NODEFILE" "./program.exe"` runs one copy of program.exe on each of the cores assigned to the job
+
+## OpenMP
+- For parallelization on shared memory systems. At MSI this is usually one node, composed of 2 sockets. (May be more sockets, sounds like this is an older tutorial).
+- `lscpu` command gives you architecture details for your node
+- Easier to program/debug than MPI. 
+- OpenMP uses threads for parallelization. Typically specify # cores/ - 1 to use. 
+- Recommend not reading/writing within paralellization. Can be done if reading/writing to different files
+- The person giving this part of the lecture is a terrible educator. This is not accessible to me at all, and I'm reasonably technically literate.
+- Hyperthreading on MSI is not on so the number of threads = number of cores.
+
+## MPI
+- different versions available - `module load impi`, `module load ompi`, `module load pmpi` for Intel, Open and Platform MPI respectively.
+- MPI starts ranks (copies of your program) on a list of nodes `mpirun -np 8 -hostfile $PBS_NODEFILE program`. Starts 8 ranks (instances) across the nodes you have access to in the PBS_NODEFILE.
+- `MPI_Init` intializies MPI within each rank
+- `MPI_Comm_size` - gives the total number of ranks
+- `MPI_Comm_rank` gets the local rank
+- `MPI_Finalize` shuts down the MPI framework
+- `MPI_Send(buffer, ...)` Rank i sends a message
+- `MPI_Recv(buffer, ...)` Rank j receives a message
+- MPI starts ranks. Ranks may generate some data that is needed on a different rank.
+- Ranks MAY be on different nodes
+- Ranks WILL be different processes
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

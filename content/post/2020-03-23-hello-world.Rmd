@@ -1,0 +1,21 @@
+---
+title: "Hello World"
+author: "Jake Wittman"
+date: 2020-03-23
+categories: ["no_category"]
+tags: ["no_tag"]
+---
+
+Hello!
+
+This is my "blog". And by blog, I mean a place where I might post things I write. We'll see if/when I actually do that. 
+
+Possible posts you can, but probably shouldn't, expect from me:
+
+- Summaries of papers (mostly as a way to help me remember them)
+- Code for how I did something in R
+- Other assorted writings/notes to help me organize my thoughts on a topic
+
+```{r}
+print("Hello world!")
+```

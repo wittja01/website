@@ -1,0 +1,318 @@
+---
+title: "Can I figure out how to use R within a HPC system?"
+author: "Jake Wittman"
+date: 2020-06-09
+categories: ["self-resource"]
+tags: ["self-resource", "HPC", "MSI"]
+---
+
+
+
+<p>I’m beginning my journey into learning how to use the resources at the Minnesota Supercomputing Institute. This is technically the second time I’ve “begun” and I thought it might be helpful for me to just document what I’m doing/learning as a resource for future me so I don’t have to “begin” again. I’ll use the self-resource category for these posts along with the same tag and HPC/MSI tags to help me find these resources in the future.</p>
+<div id="introduction-to-msi-tutorial-video" class="section level1">
+<h1>Introduction to MSI tutorial video</h1>
+<div id="steps-to-connecting" class="section level2">
+<h2>Steps to connecting</h2>
+<ul>
+<li>Use the console and ssh into the login node with <code>ssh userid@login.msi.umn.edu</code></li>
+<li>From there, I can login to a compute node with <code>ssh node_name</code></li>
+</ul>
+</div>
+<div id="scheduling-tasks" class="section level2">
+<h2>Scheduling tasks</h2>
+<ul>
+<li>Use bash scripts to schedule tasks. For example, in the tutorial video the presenter had a file called “clustal.run” which is the bash submission script containing information for the scheduler</li>
+<li>This bash script contains (and is maybe not limited to?) info to tell the scheduler what file to run, messaging about the task, what to do with “various output”, what queue to send it to, and how long the task is expected to run.</li>
+<li>The script in the example also contains extra command line commands - change directories to where the binary is, execute the binary, takes an input file, and gives an output file</li>
+<li>Use the <code>qsub</code> command with the submission file ex: <code>qsub clustal.run</code>. This gets a submission id</li>
+<li>Check submission with <code>qstat</code> command to see the status of the job. R means running. C means complete</li>
+<li>The <code>less</code> command can be used to get a view of text files, I think?</li>
+</ul>
+</div>
+<div id="resources" class="section level2">
+<h2>Resources</h2>
+<ul>
+<li>Interactive HPC</li>
+<li>Multiple tiers of storage</li>
+<li>Cloud computing resources - could use Jupyter notebooks</li>
+</ul>
+</div>
+<div id="interactive-hpc" class="section level2">
+<h2>Interactive HPC</h2>
+<ul>
+<li>The NICE program allows you to spin up a full Linux desktop GUI.</li>
+<li>nb.msi.umn.edu gives access to JupyterHub - scheduler gets access to the Jupyter Hub</li>
+<li>nice.msi.umn.edu gives access to the Linux desktop</li>
+</ul>
+</div>
+<div id="storage" class="section level2">
+<h2>Storage</h2>
+<ul>
+<li>Each PI account gets 120 TB on the Tier-2 storage. Not POSIX, have to access via S3 interface</li>
+<li>Access to long-term archive storage</li>
+<li>Globus is used for moving data from say, desktop to MSI or to move data among the storage tiers</li>
+</ul>
+</div>
+</div>
+<div id="introduction-to-linux-tutorial" class="section level1">
+<h1>Introduction to Linux tutorial</h1>
+<div id="useful-commands-that-im-less-familiar-with" class="section level2">
+<h2>Useful commands that I’m less familiar with</h2>
+<ul>
+<li><code>pwd</code> prints the working directory</li>
+<li><code>clear</code> to clear the screen</li>
+<li><code>cd..</code> takes you up one level</li>
+<li><code>mv</code> lets you move a file or directory. <code>mv location_original location_move</code></li>
+<li><code>cp</code> copies a file or directory <code>cp location_original location_copy</code></li>
+<li>To delete a directory and everything inside must do <code>rm -r</code> which stands for recursive. Deletes the dir and everything inside it</li>
+<li><code>.</code> stands for current directory, <code>~</code> stands for home directory</li>
+<li>To interrupt a command that has been entered and is running <code>ctrl + c</code>.</li>
+<li><code>man command</code> views command manual pages, for example <code>man rm</code></li>
+<li><code>*</code> wildcard symbol. Ex: <code>ls p*</code> lists the content of all directories with names starting with letter p or <code>rm *txt</code> removes all .txt files in a directory or <code>mv *.txt ..</code> moves all text files up one directory level</li>
+<li>in nano <code>ctrl + o</code> saves file</li>
+<li><code>less</code> lets you view a file without editing, exit with q (doesn’t seem to be part of Windows Terminal)</li>
+<li><code>&gt;</code> sends the output of a command to somewhere ex: <code>ls &gt; filelist.txt</code> saves the output of ls in the file filelist.txt</li>
+<li><code>&gt;&gt;</code> appends new output to an existing file without overwriting. <code>&gt;</code> will overwrite</li>
+<li><code>|</code> Sends output of one command to another command <code>ls | less</code> pipes output of ls to the less command. Ex: <code>ls | grep .txt</code> sends the output of ls to grep to search for .txt in strings</li>
+<li><code>sed</code> is a command that can be used to replace text, I think? Not 100% clear on how to use it</li>
+<li>Can string together <code>|</code> with <code>&gt;</code> to put the output of pipes into a file</li>
+<li><code>chmod</code> changes the permissions of a file/directory. Ex: <code>chmod g+r filename</code>. Use <code>chmod o+...</code> to give outsiders permissions. <code>chmod g-rw filename</code> removes read and write permissions from group members. Use <code>u</code> to give permissions to u (or remove permissions). Works for directories too. Directory permissions apply to everything within the directory.
+-<code>chown</code> give ownership of a file to a person or group
+-<code>find . -name file.txt</code> where . tells you where to start looking for a file. Will search in all sub directories, so if <code>.</code> searches all sub directorys of cd</li>
+<li><code>cat</code> reads a file into the terminal <code>cat hello.sh</code> prints the contents of the hello.sh file</li>
+<li><code>grep</code> search ex: <code>grep hello *</code> searches for hello in the directories *</li>
+<li><code>ping</code> tests network connectivity ex: <code>ping www.google.com</code> and can kill with ctrl+c</li>
+<li><code>wc</code> word count</li>
+<li><code>top</code> shows you the top running programs on your current node. Gives some summaries of usage</li>
+<li><code>ps</code> shows you running processes, follow by <code>aux</code> to get additional info</li>
+<li><code>kill process_id</code> kills a process. Get the process id from <code>ps</code></li>
+<li><code>date</code> current dat</li>
+<li><code>tar</code> extract/create archive</li>
+<li><code>groups</code> shows you group membership</li>
+<li><code>head</code>/<code>tail</code> top and bottom of a file</li>
+<li><code>uname</code> prints username</li>
+<li><code>cd -</code> returns to previous directory</li>
+<li><code>find . -type f -name 'ABC*' -delete</code> deletes all files with name containing “ABC” in the directory .</li>
+<li><code>ls -a</code> lists hidden files (starts with a “.”)</li>
+<li><code>./program.exe &amp;</code> runs the program in the background and returns control to you. <code>ping www.google.com &gt; pingfile.txt &amp;</code> runs ping in bacvkground and puts output into pingfile.txt. Kill with <code>kill process_id</code>. If you log out while the process is still going, it will continue</li>
+<li></li>
+</ul>
+</div>
+<div id="remote-connections" class="section level2">
+<h2>Remote connections</h2>
+<ul>
+<li><code>ssh username@login.msi.umn.edu</code> to get into the login node</li>
+<li><code>ssh cluster_name</code> to connect to a particular compute node</li>
+<li><code>exit</code> to close a connection</li>
+<li><code>ssh -X</code> allows graphics windows, but its better to use NICE if you want graphics systems</li>
+<li><code>scp</code> lets you copy a file from your desktop to the MSI machine Ex: <code>scp localfile.txt login.msi.umn.edu:~/</code> to copy a file to the login machine. Following the colon is the directory you want to copy to (in this case the home directory). Reversing the order of the directories to the command allows you to pull from the supercomputer to the home machine. Will work with wildcards</li>
+<li>Use Globus for a lot of files/a lot of big files</li>
+</ul>
+</div>
+<div id="file-permissions" class="section level2">
+<h2>File permissions</h2>
+<ul>
+<li>Every file and directory belongs to a user and a group. Files and directories have a set of permissions controlling who can read, write, and execute them. To see files and permissions use <code>ls -l</code>.</li>
+<li>The first symbol is - for file, d for directory. The next three show r (read), w (write), x (execute) for user, the next group of three show the same for group, the last three show permissions for outsiders</li>
+<li>On MSI, every user is in a group and everyone is a member of outsiders.</li>
+<li>Can set up a “stickybit” for a directory, so anything made within a directory automatically has directory specific permissions applied ot them</li>
+<li>There are numeric codes to assign permissions <code>777</code> gives everyone all, <code>555</code> owner rwx, everyone else rw, <code>000</code> no one has any permissions</li>
+</ul>
+</div>
+<div id="executables" class="section level2">
+<h2>Executables</h2>
+<ul>
+<li>Just type the file path of the executable ex: <code>./hello.sh</code> runs a shell script called “hello”.</li>
+<li>If programs are in <code>bin</code> or <code>usr/bin</code> you can often type the program by name and not the path to run them. <code>ls</code> is an example. Type <code>which ls</code> to find out where ls is stored.</li>
+</ul>
+</div>
+<div id="environmental-variables" class="section level2">
+<h2>Environmental variables</h2>
+<ul>
+<li>PATH is an example of a variable</li>
+<li>Example: <code>VAR1 = 5</code> and then <code>echo $VAR1</code> prints <code>5</code> to the terminal</li>
+<li>To make a variable accessible to sub-processes use <code>export VAR1=5</code> VAR1 will get propogated to other shell instances you start</li>
+<li>Use the .bashrc file if there are variables you want executed everytime you login.</li>
+</ul>
+</div>
+<div id="software-modules" class="section level2">
+<h2>Software modules</h2>
+<ul>
+<li><code>module avail</code> when connected to a cluster shows you all the available software module</li>
+<li><code>module avail matlab</code> shows all the version of matlab available.</li>
+<li><code>module load matlab/R2016b</code> loads a specific version of Matlab</li>
+<li><code>module unload matlab/R2016b</code> unloads the Matlab</li>
+<li>loading allows you to run the software by name</li>
+<li><code>module purge</code> unloads all</li>
+<li><code>module show matlab/R2016B</code> tells you what is happening</li>
+<li><code>module list</code> shows you what is currently loaded</li>
+</ul>
+</div>
+<div id="scripts" class="section level2">
+<h2>Scripts</h2>
+<ul>
+<li>at the top of the script typing <code>#!/bin/bash -l</code> at top specifies a bash script</li>
+<li>Type shell commands below and create a script of commands to run when you run the bash script</li>
+<li>Probably want to give x permission to these to actually run them.</li>
+</ul>
+</div>
+</div>
+<div id="job-submission-and-scheduling" class="section level1">
+<h1>Job Submission and Scheduling</h1>
+<div id="connecting-to-msi" class="section level2">
+<h2>Connecting to MSI</h2>
+<ul>
+<li>Need to get an ssh capable program for Windows like PuTTY or Cygwin</li>
+<li>type <code>exit</code> to close ssh connections</li>
+</ul>
+</div>
+<div id="msi-computing-environment" class="section level2">
+<h2>MSI Computing environment</h2>
+<ul>
+<li>Home directories are unified across systems</li>
+<li>View disk space with <code>groupquota</code></li>
+</ul>
+</div>
+<div id="job-scheduling" class="section level2">
+<h2>Job Scheduling</h2>
+<ul>
+<li>Two types of jobs - non-interactive and interactive</li>
+<li>Job scheduler front end is Portable Batch System (PBS)</li>
+<li>Jobs start in your home directory with no modules</li>
+<li>Must load modules or change directories within job script</li>
+</ul>
+</div>
+<div id="job-scripts" class="section level2">
+<h2>Job Scripts</h2>
+<ul>
+<li>First line <code>#!/bin/bash -l</code> telling it how to read the rest of the script</li>
+<li><code>#PBS -l walltime=8:00:00,nodes=3:ppn=8,pmem=1000mb</code> - how long to run, number of nodes, number of cores per nodes, and amount of memory. This is requestin 8 hours, with 3 nodes and 8 cores per node (24 total cores), and per core memory (1000 mb * 24 cores = ~ 24 gb). Can also just specify total memory with <code>mem=24000mb</code> or <code>mem=24gb</code>. This line is required</li>
+<li>1 core, 1 thread</li>
+<li>Presenter recommended working up to 24 total cores, then incrementing in 24 cores above that (24 cores per node, so if the job is multi-node, always requesting all cores). Might get job started faster with less cores per node, but also spreads you wider</li>
+<li><code>#PBS -m abe</code> (not required). Requests an email message when job aborts, beings, or ends.</li>
+<li><code>#PBS -M sample_email@umn.edu</code> Specifies the email address for the previous line</li>
+<li>For R jobs, it will be most simple to use 1 node with max of 24 cores. More than 1 node and I have to learn how to use MPI because spreading work over the nodes requires working over the network</li>
+<li>Name file .pbs</li>
+<li>Add a line <code>cd $PBS_O_WORKDIR</code> after loading modules to move the cd to the directory the job was submitted from. Jobs start running from the home directory.</li>
+</ul>
+</div>
+<div id="submitting-a-job" class="section level2">
+<h2>Submitting a job</h2>
+<ul>
+<li><code>qsub -q queuename scriptname</code>. Can leave out <code>-q queuename</code>. Including it allows you to specify a certain queue. Leaving it out and the scheduler will try to fit your job in somewhere. If you need special queue, best to specify</li>
+<li>Resources to consider: walltime, total cores and cores per node, memory per node, and special hardware</li>
+<li><code>qstat</code> to see status of jobs</li>
+<li>If you script produces terminal output, collects text into a .o file. Any errors collected into a .e file. Any other output (like data) will appear too.</li>
+<li>Clusters are busiest during the week, least busy on Sunday.</li>
+<li><code>showq</code> shows all jobs. Can specify <code>-w user=username</code>.</li>
+<li><code>checkjob -v jobnumber</code> will show you info about job.</li>
+<li><code>qdel jobnumber</code> lets you delete a job</li>
+</ul>
+</div>
+<div id="interactive-jobs" class="section level2">
+<h2>Interactive jobs</h2>
+<ul>
+<li><code>qsub -I -l walltime=00:30:00,nodes=1:ppn=4,mem=2gb</code>. -I is for interactive. Dunno what -l or -X is. This requests 10 minutes. -X doesn’t seem to work for me when I try to submit jobs <em>shrug</em></li>
+<li>These jobs wait in queue like all others</li>
+</ul>
+</div>
+<div id="service-units" class="section level2">
+<h2>Service Units</h2>
+<ul>
+<li>Given 70,000 SU in account each year. Can request more up to I think 280,000 SU without much justification.</li>
+<li>1 SU corresponds to 1.5 hours on 1 core. Lab cluster doesn’t consume SU (does lab cluster still exist?)</li>
+<li><code>acctinfo</code> shows you remaining SU.</li>
+<li>Fairshare target designates queue priority. If you use more of the queue than expected, your jobs get slowed down. Resets about every week (some sort of decaying weighted average, reseting to 0 in 7 days with no additional usage).</li>
+</ul>
+</div>
+<div id="simple-parallelization-backgrounding" class="section level2">
+<h2>Simple parallelization: Backgrounding</h2>
+<ul>
+<li>If you have several programs, each only using 1 core, you can collect within a job script and run all in one script.</li>
+</ul>
+<pre><code>#!/bin/bash -l
+#PBS -l walltime=8:00:00,nodes=1:ppn=8,pmem=1000mb
+#PBS -m abe
+#PBS -M sample_email@umn.edu
+
+cd ~/job_directory
+module load example_program/1.0
+./program1.exe &lt;input1&gt; output1 &amp;
+./program2.exe &lt;input2&gt; output2 &amp; ...
+./program8.exe &lt;input8&gt; output8 &amp;
+wait</code></pre>
+<ul>
+<li><p>The &amp; sends each job to run on a core and then wait waits until they’re all done. If you don’t include wait, the job scheduler will kill the job when one finishes.</p></li>
+<li><p>These programs must run independently (serial).</p></li>
+<li><p>Probably best if these will all run about the same time, otherwise you have idle cores and waste SU</p></li>
+<li><p>Job Arrays are better for jobs that have differing run times</p></li>
+<li><p>Works with a template script:</p></li>
+</ul>
+<pre><code>#!/bin/bash -l
+#PBS -l walltime=8:00:00,nodes=1:ppn=8,pmem=1000mb
+#PBS -m abe
+#PBS -M sample_email@umn.edu
+
+cd ~/job_directory
+module load example_program/1.0
+./program.exe &lt; input$PBS_ARRAYID &gt; output$PBS_ARRAYID</code></pre>
+<p>Then submit an array of 10 jobs with <code>qsub -t 1-10 template.pbs</code>
+- the -t makes 10 copies of the job and replacying PBS_ARRAYID with the number 1-10.
+- In this example, the jobs would each get 1 node with 8 cores and each job runs when space is available.</p>
+</div>
+<div id="using-r" class="section level2">
+<h2>Using R</h2>
+<ul>
+<li>start R with <code>module load R</code> then <code>R</code>. Then can install packages as normal. (May need to check where packages are installed)</li>
+</ul>
+</div>
+</div>
+<div id="parallel-computation-overview" class="section level1">
+<h1>Parallel computation overview</h1>
+<ul>
+<li>A single node has a shared memory system. All the processors cores on a single node share the same memory</li>
+<li>Strategies for shared memory: collect serial calculations, a single program uses multiple threads (often means OpenMP), or a message passing (MPI) framework but Not needed for shared memory system.</li>
+<li>Using multiple nodes is a distributed memory system. Simple parallelization can still work (collecting serial calculations), but otherwise have to use message passing alone or message passing + threading</li>
+<li>Simple parallelization &lt; OpenMP &lt; MPI &lt; MPI + OpenMP &lt; Accelerators (GPUs using CUDA). Order of programming difficulty</li>
+</ul>
+<div id="simple-parallelization" class="section level2">
+<h2>Simple parallelization</h2>
+<ul>
+<li>See example of simple paralellization from the job scheduling tutorial. Could also be the same program with different inputs</li>
+<li>GNU Parallel is a way to spawn multiple threads to perform a shell tasks</li>
+<li>GNU PArallel example: <code>cat command_list.txt | parallel -j 24</code> Goes through the list of commands in the .txt file and runs each command in the list in chunks of 24. Each job should still be independent.</li>
+<li><code>find . -name '*.txt' | parallel -j 48 -sshloginfile $PBS_NODEFILE wc {}</code> will find files ending in .txt and then will use 48 threads to word count (wc) each file. Specifying sshloginfile makes it aware of all nodes being used, not just a single node</li>
+<li><code>pdsh</code> is used to run multiple independnet processes on multiple hosts</li>
+<li><code>pdsh -R ssh -w node0123, node0123, node0125 "./program.exe"</code> will run two copies of program.exe on node0123 and one copy on node0125 using ssh to connect.</li>
+<li><code>pdsh -R ssh -w^"$PBS_NODEFILE" "./program.exe"</code> runs one copy of program.exe on each of the cores assigned to the job</li>
+</ul>
+</div>
+<div id="openmp" class="section level2">
+<h2>OpenMP</h2>
+<ul>
+<li>For parallelization on shared memory systems. At MSI this is usually one node, composed of 2 sockets. (May be more sockets, sounds like this is an older tutorial).</li>
+<li><code>lscpu</code> command gives you architecture details for your node</li>
+<li>Easier to program/debug than MPI.</li>
+<li>OpenMP uses threads for parallelization. Typically specify # cores/ - 1 to use.</li>
+<li>Recommend not reading/writing within paralellization. Can be done if reading/writing to different files</li>
+<li>The person giving this part of the lecture is a terrible educator. This is not accessible to me at all, and I’m reasonably technically literate.</li>
+<li>Hyperthreading on MSI is not on so the number of threads = number of cores.</li>
+</ul>
+</div>
+<div id="mpi" class="section level2">
+<h2>MPI</h2>
+<ul>
+<li>different versions available - <code>module load impi</code>, <code>module load ompi</code>, <code>module load pmpi</code> for Intel, Open and Platform MPI respectively.</li>
+<li>MPI starts ranks (copies of your program) on a list of nodes <code>mpirun -np 8 -hostfile $PBS_NODEFILE program</code>. Starts 8 ranks (instances) across the nodes you have access to in the PBS_NODEFILE.</li>
+<li><code>MPI_Init</code> intializies MPI within each rank</li>
+<li><code>MPI_Comm_size</code> - gives the total number of ranks</li>
+<li><code>MPI_Comm_rank</code> gets the local rank</li>
+<li><code>MPI_Finalize</code> shuts down the MPI framework</li>
+<li><code>MPI_Send(buffer, ...)</code> Rank i sends a message</li>
+<li><code>MPI_Recv(buffer, ...)</code> Rank j receives a message</li>
+<li>MPI starts ranks. Ranks may generate some data that is needed on a different rank.</li>
+<li>Ranks MAY be on different nodes</li>
+<li>Ranks WILL be different processes</li>
+</ul>
+</div>
+</div>
