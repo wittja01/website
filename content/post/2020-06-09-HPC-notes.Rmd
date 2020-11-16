@@ -90,7 +90,7 @@ I'm beginning my journey into learning how to use the resources at the Minnesota
 - `ssh username@login.msi.umn.edu` to get into the login node
 - `ssh cluster_name` to connect to a particular compute node
 - `exit` to close a connection
-- `ssh -X` allows  graphics windows, but its better to use NICE if you want graphics systems
+- `ssh -X` allows  graphics windows, but its better to use NICE if you want graphics systems
 - `scp` lets you copy a file from your desktop to the MSI machine Ex: `scp localfile.txt login.msi.umn.edu:~/` to copy a file to the login machine. Following the colon is the directory you want to copy to (in this case the home directory). Reversing the order of the directories to the command allows you to pull from the supercomputer to the home machine. Will work with wildcards
 - Use Globus for a lot of files/a lot of big files
 
@@ -152,7 +152,7 @@ I'm beginning my journey into learning how to use the resources at the Minnesota
 - Jobs start in your home directory with no modules
 - Must load modules or change directories within job script
 
-## Job Scripts
+## Job Scripts - PBS
 
 - First line `#!/bin/bash -l` telling it how to read the rest of the script
 - `#PBS -l walltime=8:00:00,nodes=3:ppn=8,pmem=1000mb` - how long to run, number of nodes, number of cores per nodes, and amount of memory. This is requestin 8 hours, with 3 nodes and 8 cores per node (24 total cores), and per core memory (1000 mb * 24 cores = ~ 24 gb). Can also just specify total memory with `mem=24000mb` or `mem=24gb`. This line is required
@@ -163,6 +163,39 @@ I'm beginning my journey into learning how to use the resources at the Minnesota
 - For R jobs, it will be most simple to use 1 node with max of 24 cores. More than 1 node and I have to learn how to use MPI because spreading work over the nodes requires working over the network
 - Name file .pbs
 - Add a line `cd $PBS_O_WORKDIR` after loading modules to move the cd to the directory the job was submitted from. Jobs start running from the home directory.
+
+## Job Scripts - SLURM
+- Update! UMN is moving to a SLURM job handler
+- `sbatch` is used now instead of `qsub` for submitting a job
+- `srun --pty bash` is used to submit an interactive job (formerly `qsub -I`)
+- `scancel` deletes a job
+- `scontrol show job` checks job info. Dunno how to specify for a specific job.
+- `squeue --me` To see only your job info
+- No more amd_or_intel queue
+- Can specify several queues that would work and SLURM will automatically assign it whereever it fits , seperate partitions by a comma
+- SLURM scripts are longer vertically, all the following flags should be preceeded by #SBATCH
+- `--nodes = 1` requests 1 node
+- `--ntasks-per-node=1` This requests the number of cpus (1 in this case)
+- `--cpus-per-task=1` Still not entirely sure what this does, but I think its a way of chunking multiple cpus per task. Just use `ntasks` to specify the # of CPUs I think. Total # of CPUS might be equal to `ntasks * cpus`
+- `--mem=2gb` request 2 GB of RAM. Unclear if I can still do pmem
+- `-t 20` requests 20 minutes. `-t 20:00` requests 20 hours
+- `--mail-type=ALL` and `--mail-user=your.x500@umn.edu`
+- `-p small` request small queue
+- `-o %j.out` and `-e %j.err` produce those output files. Can replace %j with whatever I want, but %j puts the job id in
+- Check output with `more job_id.out` (replace job_id with the job id)
+- I think I use `srun` to run a step inside a job? Do I use that to trigger an R script?
+- Okay I don't need to use `srun`, can still run like I would in a batch file. It can be useful to clarify what's ina script and gives more ganular control over how to allocate resources within a job
+- `sacct -j job_id` gives accounting info for the job
+
+
+### Interactive jobs on SLURM
+- `srun -N 1 -n 1 -c 1 --mem=2gb -t 20 -p interactive --pty bash`
+- requests 1 node (`-N 1`), 1 core (`-n 1 -c 1`), 2gb of RAM, 20 minutes of walltime, use the interactive partition (`-p interactive`), `--pty` bash tells the system to run a bash shell interactively
+- Not mentioned in presentation, but perhaps the `-n 1` designates cores for node 1? Used if using more than 1 node?
+- Once in can type `hostname` to determine what node you're connected to. 
+- `echo ${SLURM_JOBID}$` returns the job ID
+- `exit` to exit session
+
 
 ## Submitting a job
 
@@ -246,7 +279,7 @@ Then submit an array of 10 jobs with `qsub -t 1-10 template.pbs`
 - GNU Parallel is a way to spawn multiple threads to perform a shell tasks
 - GNU PArallel example: `cat command_list.txt | parallel -j 24` Goes through the list of commands in the .txt file and runs each command in the list in chunks of 24. Each job should still be independent.
 - `find . -name '*.txt' | parallel -j 48 -sshloginfile $PBS_NODEFILE wc {}` will find files ending in .txt and then will use 48 threads to word count (wc) each file. Specifying sshloginfile makes it aware of all nodes being used, not just a single node
-- `pdsh` is used to  run multiple independnet processes on multiple hosts
+- `pdsh` is used to  run multiple independnet processes on multiple hosts
 - `pdsh -R ssh -w node0123, node0123, node0125 "./program.exe"` will run two copies of program.exe on node0123 and one copy on node0125 using ssh to connect.
 - `pdsh -R ssh -w^"$PBS_NODEFILE" "./program.exe"` runs one copy of program.exe on each of the cores assigned to the job
 
@@ -271,24 +304,5 @@ Then submit an array of 10 jobs with `qsub -t 1-10 template.pbs`
 - MPI starts ranks. Ranks may generate some data that is needed on a different rank.
 - Ranks MAY be on different nodes
 - Ranks WILL be different processes
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
